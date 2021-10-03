@@ -1,15 +1,27 @@
 import React from 'react';
 import { Switch, Route} from 'react-router-dom'
 
-import { Dasboard } from '../pages/Dashboard';
-import { Repo } from '../pages/Repo';
+//import Dashboard from '../pages/Dashboard';
+//import Repo from '../pages/Repo';
+
+const Dashboard = React.lazy(() => import(
+  /* webpackPrefetch: true */
+  /* webpackChunkName: "dashboard" */
+  '../pages/Dashboard'))
+const Repo = React.lazy(() => import(
+  /* webpackPrefetch: true */
+  /* webpackChunkName: "repo" */
+  '../pages/Repo'))
+
 
 export const Routes: React.FC = () => {
   // o + significa que é só um parametro
   return (
-    <Switch>
-        <Route component={Dasboard} exact path="/" />
-        <Route component={Repo} exact path="/repositories/:repository+" />
-    </Switch>
+    <React.Suspense fallback={'Loading'}>
+      <Switch>
+          <Route component={Dashboard} exact path="/" />
+          <Route component={Repo} exact path="/repositories/:repository+" />
+      </Switch>
+    </React.Suspense>
   );
 }

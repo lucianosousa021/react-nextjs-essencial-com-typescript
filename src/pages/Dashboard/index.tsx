@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from 'react';
+import React from 'react';
 import { Title, Form, Repos, Error } from './styles'
 import logo from '../../assets/logo.svg'
 import { Link } from 'react-router-dom'
@@ -17,7 +17,7 @@ interface GithubRepository {
 }
 
 
-export const Dasboard: React.FC = () => {
+const Dashboard: React.FC = () => {
 
   const [repos, setRepos] = React.useState<GithubRepository[]>(() => {
     const storageRepos = localStorage.getItem('@GitCollection:repositories')
@@ -30,6 +30,7 @@ export const Dasboard: React.FC = () => {
   })
   const [newRepo, setNewRepo] = React.useState('')
   const [inputError, setInputError] = React.useState('')
+  const formEl = React.useRef<HTMLFormElement | null>(null)
 
   React.useEffect(() => {
     localStorage.setItem('@GitCollection:repositories', JSON.stringify(repos))
@@ -48,18 +49,30 @@ export const Dasboard: React.FC = () => {
         setInputError('Informe o username/repositório')
         return;
       }
-      const response = await api.get<GithubRepository>(`repos/${newRepo}`)
 
-      const repository = response.data
-      setRepos([...repos, repository])
-      setNewRepo('')
+      try{
+        const response = await api.get<GithubRepository>(`repos/${newRepo}`)
+
+        const repository = response.data
+        setRepos([...repos, repository])
+        formEl.current?.reset();
+        setNewRepo('')
+        setInputError('')
+      } catch {
+          setInputError('Repositório não encontrado no Github.')
+        return;
+      }
     }
   return (
     <>
       <img src={logo} alt="GitCollection" />
       <Title>Catalogo de repositórios do Github</Title>
 
-      <Form onSubmit={handleAddRepo} hasError={Boolean(inputError)}>
+      <Form
+        ref={formEl}
+        onSubmit={handleAddRepo}
+        hasError={Boolean(inputError)}
+      >
         <input
           type="text"
           placeholder="Username/repository_name"
@@ -71,8 +84,8 @@ export const Dasboard: React.FC = () => {
       {inputError && <Error>{inputError}</Error>}
 
       <Repos>
-        {repos.slice(0).reverse().map(repository => (
-          <Link to={`/repositories/${repository.full_name}`} key={repository.full_name}>
+        {repos.slice(0).reverse().map((repository, index) => (
+          <Link to={`/repositories/${repository.full_name}`} key={index}>
             <img src={repository.owner.avatar_url} alt={repository.owner.login} />
             <div>
               <strong>{repository.full_name}</strong>
@@ -85,3 +98,5 @@ export const Dasboard: React.FC = () => {
     </>
   );
 }
+
+export default Dashboard
